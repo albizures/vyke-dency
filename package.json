@@ -5,6 +5,7 @@
 	"author": "Jose Albizures <jose@albizures.com> (https://albizures.com/)",
 	"license": "MIT",
 	"keywords": [],
+	"files": ["dist"],
 	"scripts": {
 		"build": "unbuild",
 		"test": "run-s test:unit test:types test:lint",
