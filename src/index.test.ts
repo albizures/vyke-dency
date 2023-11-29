@@ -3,7 +3,7 @@ import {
 	bindDencyClass,
 	createDencyId,
 	useDency,
-} from './'
+} from '.'
 
 it('should create a single instance', () => {
 	type GameDency = {
