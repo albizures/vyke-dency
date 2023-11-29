@@ -12,13 +12,15 @@
 		"test:lint": "eslint .",
 		"test:unit": "vitest run",
 		"test:unit:dev": "vitest",
-		"test:types": "tsc --noEmit"
+		"test:types": "tsc --noEmit",
+		"release": "bumpp && pnpm publish"
 	},
 	"dependencies": {
 		"@vyke/sola": "^0.0.4"
 	},
 	"devDependencies": {
 		"@antfu/eslint-config": "^2.1.1",
+		"bumpp": "^9.2.0",
 		"eslint": "^8.54.0",
 		"knip": "^3.3.0",
 		"npm-run-all": "^4.1.5",
