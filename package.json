@@ -1,11 +1,13 @@
 {
 	"name": "@vyke/dency",
 	"type": "module",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"author": "Jose Albizures <jose@albizures.com> (https://albizures.com/)",
 	"license": "MIT",
 	"keywords": [],
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "unbuild",
 		"test": "run-s test:unit test:types test:lint",
