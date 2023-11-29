@@ -6,6 +6,7 @@
 	"license": "MIT",
 	"keywords": [],
 	"exports": {
+		"./package.json": "./package.json",
 		".": {
 			"default": {
 				"types": "./dist/index.d.ts",
