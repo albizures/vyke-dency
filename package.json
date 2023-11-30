@@ -6,15 +6,12 @@
 	"license": "MIT",
 	"keywords": [],
 	"exports": {
-		"./package.json": "./package.json",
 		".": {
-			"default": {
-				"types": "./dist/index.d.ts",
-				"import": "./dist/index.mjs"
-			}
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.cjs"
 		}
 	},
-	"main": "./dist/index.mjs",
+	"main": "./dist/index.cjs",
 	"types": "./dist/index.d.ts",
 	"files": [
 		"dist"
