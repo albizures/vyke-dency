@@ -48,7 +48,7 @@ export type DencyInstanceType = AnyDency['instanceType']
 
 export type DencyId<_TType> = { name: string, __type: _TType }
 
-export const sola = new Sola({ tag: 'vyke:dency' })
+const sola = new Sola({ tag: 'vyke:dency' })
 
 class DencyContainer {
 	ids = new Set<string>()
