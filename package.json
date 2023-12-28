@@ -1,7 +1,7 @@
 {
 	"name": "@vyke/dency",
 	"type": "module",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"packageManager": "pnpm@8.11.0",
 	"author": "Jose Albizures <jose@albizures.com> (https://albizures.com/)",
 	"license": "MIT",
