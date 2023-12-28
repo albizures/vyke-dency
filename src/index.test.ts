@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import {
+	bindDency,
 	bindDencyClass,
 	createDencyId,
 	useDency,
@@ -90,6 +91,57 @@ it('should create a new instance each time one is requested', () => {
 	const second = useDency(TransientDency)
 
 	expect(first).not.toBe(second)
+})
+
+it('should create an instance from using factory', () => {
+	type GameDency = {
+		win: () => void
+		lose: () => void
+		play: () => void
+		stop: () => void
+	}
+
+	const GameDency = createDencyId<GameDency>('game')
+	const play = vi.fn()
+
+	class Game implements GameDency {
+		static deps = [] as const
+		win = vi.fn()
+		lose = vi.fn()
+		play = play
+		stop = vi.fn()
+	}
+
+	bindDencyClass(
+		GameDency,
+		Game,
+		Game.deps,
+	)
+
+	type AppDency = {
+		start: () => void
+	}
+
+	const AppDency = createDencyId<AppDency>('app')
+
+	const createApp = vi.fn((game: GameDency) => {
+		return {
+			start() {
+				game.play()
+			},
+		}
+	})
+
+	const deps = [GameDency] as const
+
+	bindDency(
+		AppDency,
+		createApp,
+		deps,
+	)
+	const app = useDency(AppDency)
+
+	app.start()
 })
 
 it.todo('should create a new instance within different scopes')

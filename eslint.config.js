@@ -6,7 +6,6 @@ export default antfu(
 		stylistic: {
 			indent: 'tab',
 		},
-		ignores: ['**/.tshy/**/*'],
 	},
 	{
 		rules: {

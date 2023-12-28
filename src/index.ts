@@ -10,12 +10,15 @@ export type TupleIdToDencies<T> =
 			? [ExtractType<TLast>]
 			: []
 
-type Class<T, Arguments extends Array<any> = Array<any>> = {
-	prototype: Pick<T, keyof T>
-	new(...arguments_: Arguments): T
+type Class<TType, Arguments extends Array<any> = Array<any>> = {
+	prototype: Pick<TType, keyof TType>
+	new(...arguments_: Arguments): TType
 }
 
 export type DencyClass<TType, TDeps> = Class<TType, TupleIdToDencies<TDeps>>
+export type DencyFactory<TType, TDeps> = {
+	(...arguments_: TupleIdToDencies<TDeps>): TType
+}
 
 export type SpecificDency<TType> = ({
 	instanceType: 'singleton'
@@ -26,23 +29,20 @@ export type SpecificDency<TType> = ({
 	instanceType: 'scoped'
 	scopes: Map<string, TType>
 })
-export type Dency<TType, TDeps> = {
-	type: 'class'
-	deps: TDeps
-	Class: DencyClass<TType, TDeps>
-} & SpecificDency<TType>
+export type Dency<TType, TDeps> = SpecificDency<TType> & ({
+	type: 'factory'
+	factory: DencyFactory<TType, TDeps>
+	deps: Readonly<TDeps>
+})
 
-type AnyClass = {
-	prototype: any
-	new(...arguments_: Array<any>): any
-}
+type AnyDency = SpecificDency<any> & ({
+	type: 'factory'
+	factory: {
+		(...arguments_: Array<any>): any
 
-type AnyDency = SpecificDency<any> & {
-	type: 'class'
-	deps: AnyDeps
-	Class: AnyClass
-}
-
+	}
+	deps: ReadonlyArray<any>
+})
 export type DencyType = AnyDency['type']
 export type DencyInstanceType = AnyDency['instanceType']
 
@@ -66,9 +66,9 @@ class DencyContainer {
 		return { name } as DencyId<TType>
 	}
 
-	bindClass<TType, TDeps, TClass extends DencyClass<TType, TDeps>>(
+	bind<TType, TDeps, TFactory extends DencyFactory<TType, TDeps>>(
 		id: DencyId<TType>,
-		Class: TClass,
+		factory: TFactory,
 		deps: TDeps,
 		instanceType: DencyInstanceType = 'singleton',
 	) {
@@ -81,11 +81,26 @@ class DencyContainer {
 		const extra = instanceType === 'scoped' ? { instanceType, scopes: new Map() } : { instanceType }
 
 		dencies.set(id, {
-			Class,
+			type: 'factory',
 			deps: deps as AnyDeps,
-			type: 'class',
+			factory: factory as AnyDency['factory'],
 			...extra,
 		})
+	}
+
+	bindClass<TType, TDeps, TClass extends DencyClass<TType, TDeps>>(
+		id: DencyId<TType>,
+		Class: TClass,
+		deps: TDeps,
+		instanceType: DencyInstanceType = 'singleton',
+	) {
+		this.bind(id,
+			(...args: TupleIdToDencies<TDeps>) => {
+				return new Class(...args)
+			},
+			deps,
+			instanceType,
+		)
 	}
 
 	#getDency<TType>(id: DencyId<TType>) {
@@ -101,20 +116,20 @@ class DencyContainer {
 
 	use<TType>(id: DencyId<TType>): TType {
 		const dency = this.#getDency(id)
-		if (dency.type === 'class') {
+		if (dency.type === 'factory') {
+			const { factory } = dency
 			const deps = dency.deps.map(
 				(id: DencyId<unknown>) => this.use(id),
 			) as Array<any>
-
 			if (dency.instanceType === 'singleton') {
-				const instance = dency.instance || new dency.Class(...deps)
+				const instance = dency.instance || factory(...deps)
 
 				dency.instance = instance
 				return instance
 			}
 
 			if (dency.instanceType === 'transient') {
-				const instance = new dency.Class(...deps)
+				const instance = factory(...deps)
 
 				return instance
 			}
@@ -129,5 +144,6 @@ export const dency = new DencyContainer()
 export const createDencyId = dency.create.bind(dency)
 
 export const bindDencyClass = dency.bindClass.bind(dency)
+export const bindDency = dency.bind.bind(dency)
 
 export const useDency = dency.use.bind(dency)
