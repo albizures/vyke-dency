@@ -8,7 +8,24 @@ export default antfu(
 		},
 	},
 	{
+		files: ['*.ts', '*.tsx'],
 		rules: {
+			// for some reason this rules is not working
+			// when listed as general rule.
+			'ts/consistent-type-imports': [
+				'error',
+				{
+					prefer: 'type-imports',
+					fixStyle: 'inline-type-imports',
+				},
+			],
+		},
+	},
+	{
+		rules: {
+			'prefer-const': 'off',
+			'antfu/top-level-function': 'off',
+			'import/no-mutable-exports': 'off',
 			'ts/array-type': ['error', { default: 'generic', readonly: 'generic' }],
 			'ts/consistent-type-definitions': ['error', 'type'],
 			'ts/indent': 'off',
@@ -17,13 +34,6 @@ export default antfu(
 			'curly': ['error', 'all'],
 			'indent': 'off',
 			'antfu/consistent-list-newline': 'off',
-			'ts/consistent-type-imports': [
-				'error',
-				{
-					prefer: 'type-imports',
-					fixStyle: 'inline-type-imports',
-				},
-			],
 		},
 	},
 )
