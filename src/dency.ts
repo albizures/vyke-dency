@@ -38,7 +38,7 @@ export function createScope(): Scope {
 /**
  * The root scope. it is used by default if no scope is provided.
  */
-export const rootScope = createScope()
+export const rootScope: Scope = createScope()
 
 const [getScope, runInScope] = createContext(rootScope)
 
