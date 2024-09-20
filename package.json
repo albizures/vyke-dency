@@ -39,10 +39,11 @@
 		"@vyke/jsr-sync": "^0.0.3",
 		"@vyke/tsdocs": "^0.0.8",
 		"eslint": "^9.10.0",
+		"jsr": "^0.13.2",
 		"knip": "^5.30.2",
 		"npm-run-all": "^4.1.5",
 		"standard-version": "^9.5.0",
-		"typescript": "^5.6.2",
+		"typescript": "^5.6.0",
 		"unbuild": "^2.0.0",
 		"vitest": "^2.1.1"
 	},
