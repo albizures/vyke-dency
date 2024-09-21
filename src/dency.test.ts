@@ -337,3 +337,34 @@ describe('scoped dependencies', () => {
 		expect(car2.start()).toBe('starting car1')
 	})
 })
+
+describe('dependencies', () => {
+	it('should register only direct dependencies', () => {
+		const dep1 = defineDency(() => {
+			return {}
+		})
+		const dep2 = defineDency(() => {
+			return {}
+		})
+
+		const dep3 = defineDency((_dep1 = dep1(), _dep2 = dep2()) => {
+			return {}
+		})
+
+		const main = defineDency((_dep3 = dep3()) => {
+			return {}
+		})
+
+		main()
+
+		expect(dep1.deps.size).toBe(0)
+		expect(dep2.deps.size).toBe(0)
+
+		expect(dep3.deps.size).toBe(2)
+		expect(dep3.deps).includes(dep1.creator)
+		expect(dep3.deps).includes(dep2.creator)
+
+		expect(main.deps.size).toBe(1)
+		expect(main.deps).includes(dep3.creator)
+	})
+})

@@ -40,7 +40,14 @@ export function createScope(): Scope {
  */
 export const rootScope: Scope = createScope()
 
-const [getScope, runInScope] = createContext(rootScope)
+type Context = {
+	scope: Scope
+	parentInjector?: Injector<Creator>
+}
+
+const [getContext, runInContext] = createContext<Context>({
+	scope: rootScope,
+})
 
 /**
  * Singleton scope type.
@@ -69,26 +76,35 @@ export const SCOPE_TYPE = {
  */
 export type ScopeType = typeof SCOPE_TYPE[keyof typeof SCOPE_TYPE]
 
-type DencyConfig = {
+type Config = {
 	scopeType?: ScopeType
 }
 
-type DencyInjectorArgs<TProps> = [TProps] extends [never]
+type InjectorArgs<TProps> = [TProps] extends [never]
 	? { scope?: Scope }
 	: {
 			scope?: Scope
 			props: TProps
 		}
 
-type DencyInjector<
+type Injector<
 	TCreator extends Creator,
 	TProps = InferProps<TCreator>,
-> = [TProps] extends [never]
-	? (args?: DencyInjectorArgs<never>) => ReturnType<TCreator>
-	: (args: DencyInjectorArgs<TProps>) => ReturnType<TCreator>
+> = ([TProps] extends [never]
+	? (args?: InjectorArgs<never>) => ReturnType<TCreator>
+	: (args: InjectorArgs<TProps>) => ReturnType<TCreator>) & {
+		/**
+		 * Direct dependencies of the creator.
+		 */
+		deps: Set<Creator>
+		/**
+		 * The creator function.
+		 */
+		creator: TCreator
+	}
 
 type Args<TProps> = {
-	scope?:	Scope
+	scope?: Scope
 	props?: TProps
 }
 
@@ -109,19 +125,26 @@ const NO_PROPS = Symbol('NO_PROPS')
  */
 export function defineDency<
 	TCreator extends Creator,
-	TConfig extends DencyConfig,
->(creator: TCreator, config?: TConfig): DencyInjector<TCreator> {
+	TConfig extends Config,
+>(creator: TCreator, config?: TConfig): Injector<TCreator> {
 	const { scopeType = SINGLETON_SCOPE } = config ?? {}
+	const deps = new Set<Creator>()
 
-	return (args?: Args<InferProps<TCreator>>) => {
-		const { scope = getScope(), props = NO_PROPS } = args ?? {}
+	const injector = (args?: Args<InferProps<TCreator>>) => {
+		const { parentInjector, scope: contextScope } = getContext()
+
+		if (parentInjector) {
+			parentInjector.deps.add(creator)
+		}
+
+		const { scope = contextScope, props = NO_PROPS } = args ?? {}
 
 		function create() {
 			return props === NO_PROPS ? creator() : creator(props)
 		}
 
 		if (scopeType === TRANSIENT_SCOPE) {
-			return runInScope(scope, create)
+			return runInContext({ scope, parentInjector: injector }, create)
 		}
 
 		const { instances } = scopeType === SINGLETON_SCOPE ? rootScope : scope
@@ -131,11 +154,16 @@ export function defineDency<
 			return instance
 		}
 
-		return runInScope(scope, () => {
+		return runInContext({ scope, parentInjector: injector }, () => {
 			const newInstance = create()
 			instances.set(creator, newInstance)
 
 			return newInstance
 		})
 	}
+
+	injector.deps = deps
+	injector.creator = creator
+
+	return injector
 }

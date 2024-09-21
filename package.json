@@ -50,6 +50,16 @@
 	"standard-version": {
 		"skip": {
 			"changelog": true
-		}
+		},
+		"bumpFiles": [
+			{
+				"filename": "package.json",
+				"type": "json"
+			},
+			{
+				"filename": "jsr.json",
+				"type": "json"
+			}
+		]
 	}
 }
