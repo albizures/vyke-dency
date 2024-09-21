@@ -21,9 +21,9 @@ npm i @vyke/dency
 
 ## Examples
 ```ts
-import { createScope, defineDency, TRANSIENT_SCOPE } from '@vyke/dency'
+import { createScope, defineDep, TRANSIENT_SCOPE } from '@vyke/dency'
 
-const getTheme = defineDency(() => {
+const getTheme = defineDep(() => {
 	let color = 'light'
 	return {
 		getColor: () => color,
@@ -33,7 +33,7 @@ const getTheme = defineDency(() => {
 	}
 })
 
-const createThemeToggle = defineDency((theme = getTheme()) => {
+const createThemeToggle = defineDep((theme = getTheme()) => {
 	const theme = scope.get(theme)
 	return {
 		toogle: () => theme.toogle()
@@ -49,11 +49,11 @@ const toggle2 = createThemeToggle()
 Create a new scope.
 
 ```ts
-import { createScope, defineDency } from '@vyke/dency'
+import { createScope, defineDep } from '@vyke/dency'
 
 const scope = createScope()
 
-const createDep = defineDency()
+const createDep = defineDep()
 
 const myDep = createDeps({ scope })
 ```
@@ -73,13 +73,13 @@ Scoped scope type.
 ### SCOPE_TYPE
 Scope types.
 
-### defineDency
+### defineDep
 Define a dependency.
 
 ```ts
-import { defineDency } from '@vyke/dency'
+import { defineDep } from '@vyke/dency'
 
-const createDep = defineDency(() => 'Hello, World!')
+const createDep = defineDep(() => 'Hello, World!')
 
 const myDep = createDep()
 

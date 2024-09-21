@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createScope, defineDency, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE } from './dency'
+import { assertType, beforeEach, describe, expect, it, vi } from 'vitest'
+import { bundleDeps, createScope, defineDep, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE } from './dency'
 
 beforeEach(() => {
 	rootScope.reset()
@@ -9,7 +9,7 @@ describe('transient dependencies', () => {
 	it('should support creating transient dependencies', () => {
 		const start = vi.fn()
 		const fuelLevel = vi.fn(() => 100)
-		const createEngine = defineDency(() => {
+		const createEngine = defineDep(() => {
 			return {
 				start,
 				fuelLevel,
@@ -20,7 +20,7 @@ describe('transient dependencies', () => {
 
 		const engines = new Set()
 
-		const createCar = defineDency((
+		const createCar = defineDep((
 			engine = createEngine(),
 		) => {
 			engines.add(engine)
@@ -49,7 +49,7 @@ describe('transient dependencies', () => {
 
 	it('should ignore scope when creating transient dependencies', () => {
 		const scope = createScope()
-		const createTransient = defineDency(() => {
+		const createTransient = defineDep(() => {
 			return {}
 		}, {
 			scopeType: TRANSIENT_SCOPE,
@@ -72,11 +72,11 @@ describe('transient dependencies', () => {
 
 		const creator = vi.fn(() => ({}))
 
-		const createScoped = defineDency(creator, {
+		const createScoped = defineDep(creator, {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const createTransient = defineDency((_scoped = createScoped()) => {
+		const createTransient = defineDep((_scoped = createScoped()) => {
 			return {}
 		}, {
 			scopeType: TRANSIENT_SCOPE,
@@ -97,7 +97,7 @@ describe('transient dependencies', () => {
 		type Props = {
 			name: string
 		}
-		const createCar = defineDency((props: Props) => {
+		const createCar = defineDep((props: Props) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -117,7 +117,7 @@ describe('transient dependencies', () => {
 
 describe('singleton dependencies', () => {
 	it('should support creating singleton dependencies', () => {
-		const getXModel = defineDency(() => {
+		const getXModel = defineDep(() => {
 			return {
 				name: 'model x',
 			}
@@ -125,7 +125,7 @@ describe('singleton dependencies', () => {
 
 		const models = new Set()
 
-		const createXCar = defineDency((
+		const createXCar = defineDep((
 			model = getXModel(),
 		) => {
 			models.add(model)
@@ -150,7 +150,7 @@ describe('singleton dependencies', () => {
 
 	it('should ignore scope when creating singleton dependencies', () => {
 		const scope = createScope()
-		const createSingleton = defineDency(() => {
+		const createSingleton = defineDep(() => {
 			return {}
 		})
 
@@ -169,11 +169,11 @@ describe('singleton dependencies', () => {
 
 		const creator = vi.fn(() => ({}))
 
-		const createScoped = defineDency(creator, {
+		const createScoped = defineDep(creator, {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const createSingleton = defineDency((_scoped = createScoped()) => {
+		const createSingleton = defineDep((_scoped = createScoped()) => {
 			return {}
 		})
 
@@ -192,7 +192,7 @@ describe('singleton dependencies', () => {
 		type Props = {
 			name: string
 		}
-		const createCar = defineDency((props: Props) => {
+		const createCar = defineDep((props: Props) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -217,7 +217,7 @@ describe('scoped dependencies', () => {
 		const scope2001 = createScope()
 
 		const fuelLevel = vi.fn(() => 100)
-		const createEngine = defineDency(() => {
+		const createEngine = defineDep(() => {
 			return {
 				start,
 				fuelLevel,
@@ -228,7 +228,7 @@ describe('scoped dependencies', () => {
 
 		const engines = new Set()
 
-		const createCar = defineDency((
+		const createCar = defineDep((
 			engine = createEngine(),
 		) => {
 			engines.add(engine)
@@ -269,13 +269,13 @@ describe('scoped dependencies', () => {
 
 		const creator1 = vi.fn(() => ({}))
 
-		const createScoped1 = defineDency(creator1, {
+		const createScoped1 = defineDep(creator1, {
 			scopeType: SCOPED_SCOPE,
 		})
 
 		const creator2 = vi.fn((_scoped1 = createScoped1()) => ({}))
 
-		const createScoped2 = defineDency(creator2, {
+		const createScoped2 = defineDep(creator2, {
 			scopeType: SCOPED_SCOPE,
 		})
 
@@ -292,13 +292,13 @@ describe('scoped dependencies', () => {
 
 		const creator1 = vi.fn(() => ({}))
 
-		const createScoped1 = defineDency(creator1, {
+		const createScoped1 = defineDep(creator1, {
 			scopeType: SCOPED_SCOPE,
 		})
 
 		const creator2 = vi.fn((_scoped1 = createScoped1({ scope: scope2 })) => ({}))
 
-		const createScoped2 = defineDency(creator2, {
+		const createScoped2 = defineDep(creator2, {
 			scopeType: SCOPED_SCOPE,
 		})
 
@@ -317,7 +317,7 @@ describe('scoped dependencies', () => {
 		type Props = {
 			name: string
 		}
-		const createCar = defineDency((props: Props) => {
+		const createCar = defineDep((props: Props) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -338,20 +338,45 @@ describe('scoped dependencies', () => {
 	})
 })
 
+describe('bundle deps', () => {
+	it('should bundle dependencies', () => {
+		const dep1 = defineDep(() => 'Hello, World!')
+		const dep2 = defineDep((name: string) => `Hello, ${name}`)
+
+		// expect(dep2({ props: 'Mike' })).toBe('Hello, Mike')
+
+		const deps = bundleDeps({
+			dep1,
+			dep2,
+		})
+
+		const result = deps()
+
+		assertType<{
+			dep1: string
+			dep2: string
+		}>(result)
+		expect(result).toEqual({
+			dep1: 'Hello, World!',
+			dep2: 'Hello, Second World!',
+		})
+	})
+})
+
 describe('dependencies', () => {
 	it('should register only direct dependencies', () => {
-		const dep1 = defineDency(() => {
+		const dep1 = defineDep(() => {
 			return {}
 		})
-		const dep2 = defineDency(() => {
-			return {}
-		})
-
-		const dep3 = defineDency((_dep1 = dep1(), _dep2 = dep2()) => {
+		const dep2 = defineDep(() => {
 			return {}
 		})
 
-		const main = defineDency((_dep3 = dep3()) => {
+		const dep3 = defineDep((_dep1 = dep1(), _dep2 = dep2()) => {
+			return {}
+		})
+
+		const main = defineDep((_dep3 = dep3()) => {
 			return {}
 		})
 

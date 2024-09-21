@@ -17,11 +17,11 @@ export type Scope = {
  * Create a new scope.
  * @example
  * ```ts
- * import { createScope, defineDency } from '@vyke/dency'
+ * import { createScope, defineDep } from '@vyke/dency'
  *
  * const scope = createScope()
  *
- * const createDep = defineDency()
+ * const createDep = defineDep()
  *
  * const myDep = createDeps({ scope })
  * ```
@@ -114,16 +114,16 @@ const NO_PROPS = Symbol('NO_PROPS')
  * Define a dependency.
  * @example
  * ```ts
- * import { defineDency } from '@vyke/dency'
+ * import { defineDep } from '@vyke/dency'
  *
- * const createDep = defineDency(() => 'Hello, World!')
+ * const createDep = defineDep(() => 'Hello, World!')
  *
  * const myDep = createDep()
  *
  * console.log(myDep) // Hello, World!
  * ```
  */
-export function defineDency<
+export function defineDep<
 	TCreator extends Creator,
 	TConfig extends Config,
 >(creator: TCreator, config?: TConfig): Injector<TCreator> {
