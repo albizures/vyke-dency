@@ -1,5 +1,5 @@
-import { assertType, beforeEach, describe, expect, it, vi } from 'vitest'
-import { bundleDeps, createScope, defineDep, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE } from './dency'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createScope, defineDep, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE } from './dency'
 
 beforeEach(() => {
 	rootScope.reset()
