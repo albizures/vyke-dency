@@ -87,7 +87,7 @@ type InjectorArgs<TProps> = [TProps] extends [never]
 			props: TProps
 		}
 
-type Injector<
+export type Injector<
 	TCreator extends Creator,
 	TProps = InferProps<TCreator>,
 > = ([TProps] extends [never]

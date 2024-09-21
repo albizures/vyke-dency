@@ -1,6 +1,8 @@
 export {
 	createScope,
+	type Creator,
 	defineDency,
+	type Injector,
 	rootScope,
 	type Scope,
 	SCOPE_TYPE,
