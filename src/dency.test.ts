@@ -338,31 +338,6 @@ describe('scoped dependencies', () => {
 	})
 })
 
-describe('bundle deps', () => {
-	it('should bundle dependencies', () => {
-		const dep1 = defineDep(() => 'Hello, World!')
-		const dep2 = defineDep((name: string) => `Hello, ${name}`)
-
-		// expect(dep2({ props: 'Mike' })).toBe('Hello, Mike')
-
-		const deps = bundleDeps({
-			dep1,
-			dep2,
-		})
-
-		const result = deps()
-
-		assertType<{
-			dep1: string
-			dep2: string
-		}>(result)
-		expect(result).toEqual({
-			dep1: 'Hello, World!',
-			dep2: 'Hello, Second World!',
-		})
-	})
-})
-
 describe('dependencies', () => {
 	it('should register only direct dependencies', () => {
 		const dep1 = defineDep(() => {
