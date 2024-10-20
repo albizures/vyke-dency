@@ -1,5 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createScope, defineInjectable, inject, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE, use } from './injectable'
+import { assertType, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+	createScope,
+	defineInjectable,
+	inject,
+	rootScope,
+	SCOPED_SCOPE,
+	TRANSIENT_SCOPE,
+	use,
+} from './injectable'
 
 beforeEach(() => {
 	rootScope.reset()
@@ -23,6 +31,7 @@ describe('transient dependencies', () => {
 		const createCar = defineInjectable((
 			engine = inject(createEngine),
 		) => {
+			assertType<{ start: () => void, fuelLevel: () => number }>(engine)
 			engines.add(engine)
 			return {
 				start: () => {
@@ -99,6 +108,7 @@ describe('transient dependencies', () => {
 			name: string
 		}
 		const createCar = defineInjectable((props: Props, brand = inject(createBrand)) => {
+			assertType<string>(brand)
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -130,6 +140,7 @@ describe('singleton dependencies', () => {
 		const createXCar = defineInjectable((
 			model = inject(getXModel),
 		) => {
+			assertType<{ name: string }>(model)
 			models.add(model)
 			return {
 				start: () => {
@@ -358,5 +369,27 @@ describe('dependencies', () => {
 
 		expect(main.deps.size).toBe(1)
 		expect(main.deps).includes(dep3)
+	})
+})
+
+describe('use', () => {
+	it('should return undefined when dependency is not found', () => {
+		const dep = defineInjectable(() => {
+			return {}
+		})
+
+		const result = use(dep)
+
+		expect(result).toBe(undefined)
+	})
+
+	it('should return the dependency when found', () => {
+		const dep = defineInjectable(() => {
+			return {}
+		})
+
+		const result = inject(dep)
+
+		expect(use(dep)).toBe(result)
 	})
 })

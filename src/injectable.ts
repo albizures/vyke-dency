@@ -111,10 +111,10 @@ type DefineInjectableArgs = {
  * import { defineInjectable, SINGLETON_SCOPE } from '@vyke/dency'
  *
  * const createDep1 = defineInjectable(() => {
- *  return 'Hello, World!'
+ * 	return 'Hello, World!'
  * }, { scopeType: SINGLETON_SCOPE })
  * const createDep2 = defineInjectable(() => {
- * return 'Hello, World!'
+ * 	return 'Hello, World!'
  * }) // Default scope type is SINGLETON_SCOPE
  * ```
  */
@@ -137,7 +137,7 @@ export function defineInjectable<
  * ```ts
  * import { defineInjectable, inject, SINGLETON_SCOPE } from '@vyke/dency'
  * const createDep = defineInjectable(() => {
- * return 'Hello, World'
+ * 	return 'Hello, World'
  * }, { scopeType: SINGLETON_SCOPE })
  * const dep = inject(createDep) // can be used anywhere
  *
@@ -151,7 +151,7 @@ export function defineInjectable<
  * console.log(inject(createDep1)) // Hello, World!
  * ```
  */
-export function inject<TArgs extends Array<any>, TReturn>(injectable: Injectable<TArgs, TReturn>, ...args: TArgs) {
+export function inject<TArgs extends Array<any>, TReturn>(injectable: Injectable<TArgs, TReturn>, ...args: TArgs): TReturn {
 	const { scopeType = SINGLETON_SCOPE } = injectable
 	const { parentCreator, scope } = getContext()
 
@@ -190,7 +190,7 @@ export function inject<TArgs extends Array<any>, TReturn>(injectable: Injectable
  * ```ts
  * import { defineInjectable, SINGLETON_SCOPE, use } from '@vyke/dency'
  * const createDep = defineInjectable(() => {
- * return 'Hello, World'
+ * 	return 'Hello, World'
  * })
  *
  * const dep = use(createDep) // probably undefined
