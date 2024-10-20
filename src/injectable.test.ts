@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createScope, defineDep, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE } from './dency'
+import { createScope, defineInjectable, inject, rootScope, SCOPED_SCOPE, TRANSIENT_SCOPE, use } from './injectable'
 
 beforeEach(() => {
 	rootScope.reset()
@@ -9,7 +9,7 @@ describe('transient dependencies', () => {
 	it('should support creating transient dependencies', () => {
 		const start = vi.fn()
 		const fuelLevel = vi.fn(() => 100)
-		const createEngine = defineDep(() => {
+		const createEngine = defineInjectable(() => {
 			return {
 				start,
 				fuelLevel,
@@ -20,8 +20,8 @@ describe('transient dependencies', () => {
 
 		const engines = new Set()
 
-		const createCar = defineDep((
-			engine = createEngine(),
+		const createCar = defineInjectable((
+			engine = inject(createEngine),
 		) => {
 			engines.add(engine)
 			return {
@@ -35,8 +35,8 @@ describe('transient dependencies', () => {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const car1 = createCar()
-		const car2 = createCar()
+		const car1 = inject(createCar)
+		const car2 = inject(createCar)
 
 		car1.start()
 		car2.start()
@@ -49,14 +49,14 @@ describe('transient dependencies', () => {
 
 	it('should ignore scope when creating transient dependencies', () => {
 		const scope = createScope()
-		const createTransient = defineDep(() => {
+		const createTransient = defineInjectable(() => {
 			return {}
 		}, {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const instance1 = createTransient({ scope })
-		const instance2 = createTransient({ scope })
+		const instance1 = scope.inject(createTransient)
+		const instance2 = scope.inject(createTransient)
 
 		expect(instance1).not.toBe(instance2)
 
@@ -70,45 +70,47 @@ describe('transient dependencies', () => {
 	it('should give scope context to scoped dependencies', () => {
 		const scope = createScope()
 
-		const creator = vi.fn(() => ({}))
-
-		const createScoped = defineDep(creator, {
+		const createScoped = defineInjectable(() => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const createTransient = defineDep((_scoped = createScoped()) => {
+		const createTransient = defineInjectable((_scoped = inject(createScoped)) => {
 			return {}
 		}, {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const instance1 = createTransient({ scope })
-		const instance2 = createTransient({ scope })
+		const instance1 = scope.inject(createTransient)
+		const instance2 = scope.inject(createTransient)
 
 		expect(instance1).not.toBe(instance2)
 
 		expect(scope.instances.size).toBe(1)
-		expect(scope.instances.has(creator)).toBe(true)
+		expect(scope.instances.has(createScoped)).toBe(true)
 
 		expect(rootScope.instances.size).toBe(0)
 	})
 
 	it('should support props', () => {
+		const createBrand = defineInjectable(() => {
+			return 'brand'
+		})
 		type Props = {
 			name: string
 		}
-		const createCar = defineDep((props: Props) => {
+		const createCar = defineInjectable((props: Props, brand = inject(createBrand)) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
 				},
+				brand,
 			}
 		}, {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const car1 = createCar({ props: { name: 'car1' } })
-		const car2 = createCar({ props: { name: 'car2' } })
+		const car1 = inject(createCar, { name: 'car1' })
+		const car2 = inject(createCar, { name: 'car2' })
 
 		expect(car1.start()).toBe('starting car1')
 		expect(car2.start()).toBe('starting car2')
@@ -117,7 +119,7 @@ describe('transient dependencies', () => {
 
 describe('singleton dependencies', () => {
 	it('should support creating singleton dependencies', () => {
-		const getXModel = defineDep(() => {
+		const getXModel = defineInjectable(() => {
 			return {
 				name: 'model x',
 			}
@@ -125,8 +127,8 @@ describe('singleton dependencies', () => {
 
 		const models = new Set()
 
-		const createXCar = defineDep((
-			model = getXModel(),
+		const createXCar = defineInjectable((
+			model = inject(getXModel),
 		) => {
 			models.add(model)
 			return {
@@ -138,8 +140,8 @@ describe('singleton dependencies', () => {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const car1 = createXCar()
-		const car2 = createXCar()
+		const car1 = inject(createXCar)
+		const car2 = inject(createXCar)
 
 		car1.start()
 		car2.start()
@@ -150,12 +152,12 @@ describe('singleton dependencies', () => {
 
 	it('should ignore scope when creating singleton dependencies', () => {
 		const scope = createScope()
-		const createSingleton = defineDep(() => {
+		const createSingleton = defineInjectable(() => {
 			return {}
 		})
 
-		const instance1 = createSingleton({ scope })
-		const instance2 = createSingleton({ scope })
+		const instance1 = scope.inject(createSingleton)
+		const instance2 = scope.inject(createSingleton)
 
 		expect(instance1).toBe(instance2)
 
@@ -167,23 +169,21 @@ describe('singleton dependencies', () => {
 	it('should give scope context to scoped dependencies', () => {
 		const scope = createScope()
 
-		const creator = vi.fn(() => ({}))
-
-		const createScoped = defineDep(creator, {
+		const createScoped = defineInjectable(() => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const createSingleton = defineDep((_scoped = createScoped()) => {
+		const createSingleton = defineInjectable((_scoped = inject(createScoped)) => {
 			return {}
 		})
 
-		const instance1 = createSingleton({ scope })
-		const instance2 = createSingleton({ scope })
+		const instance1 = scope.inject(createSingleton)
+		const instance2 = scope.inject(createSingleton)
 
 		expect(instance1).toBe(instance2)
 
 		expect(scope.instances.size).toBe(1)
-		expect(scope.instances.has(creator)).toBe(true)
+		expect(scope.instances.has(createScoped)).toBe(true)
 
 		expect(rootScope.instances.size).toBe(1)
 	})
@@ -192,7 +192,7 @@ describe('singleton dependencies', () => {
 		type Props = {
 			name: string
 		}
-		const createCar = defineDep((props: Props) => {
+		const createCar = defineInjectable((props: Props) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -200,9 +200,9 @@ describe('singleton dependencies', () => {
 			}
 		})
 
-		const car1 = createCar({ props: { name: 'car1' } })
+		const car1 = inject(createCar, { name: 'car1' })
 		// car2 should use the same instance as car1, so the props should be ignored
-		const car2 = createCar({ props: { name: 'car2' } })
+		const car2 = inject(createCar, { name: 'car2' })
 
 		expect(car1.start()).toBe('starting car1')
 		expect(car2.start()).toBe('starting car1')
@@ -217,7 +217,7 @@ describe('scoped dependencies', () => {
 		const scope2001 = createScope()
 
 		const fuelLevel = vi.fn(() => 100)
-		const createEngine = defineDep(() => {
+		const createEngine = defineInjectable(() => {
 			return {
 				start,
 				fuelLevel,
@@ -228,8 +228,8 @@ describe('scoped dependencies', () => {
 
 		const engines = new Set()
 
-		const createCar = defineDep((
-			engine = createEngine(),
+		const createCar = defineInjectable((
+			engine = inject(createEngine),
 		) => {
 			engines.add(engine)
 			return {
@@ -243,9 +243,9 @@ describe('scoped dependencies', () => {
 			scopeType: TRANSIENT_SCOPE,
 		})
 
-		const car1 = createCar({ scope: scope2000 })
-		const car2 = createCar({ scope: scope2001 })
-		const car3 = createCar({ scope: scope2001 })
+		const car1 = scope2000.inject(createCar)
+		const car2 = scope2001.inject(createCar)
+		const car3 = scope2001.inject(createCar)
 
 		car1.start()
 		car2.start()
@@ -267,57 +267,49 @@ describe('scoped dependencies', () => {
 	it('should give scope context to other scoped dependencies', () => {
 		const scope = createScope()
 
-		const creator1 = vi.fn(() => ({}))
-
-		const createScoped1 = defineDep(creator1, {
+		const createScoped1 = defineInjectable(() => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const creator2 = vi.fn((_scoped1 = createScoped1()) => ({}))
-
-		const createScoped2 = defineDep(creator2, {
+		const createScoped2 = defineInjectable((_scoped1 = inject(createScoped1)) => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		createScoped2({ scope })
+		scope.inject(createScoped2)
 
 		expect(scope.instances.size).toBe(2)
-		expect(scope.instances.has(creator1)).toBe(true)
-		expect(scope.instances.has(creator2)).toBe(true)
+		expect(scope.instances.has(createScoped1)).toBe(true)
+		expect(scope.instances.has(createScoped2)).toBe(true)
 	})
 
 	it('should use the given scope', () => {
 		const scope1 = createScope()
 		const scope2 = createScope()
 
-		const creator1 = vi.fn(() => ({}))
-
-		const createScoped1 = defineDep(creator1, {
+		const createScoped1 = defineInjectable(() => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		const creator2 = vi.fn((_scoped1 = createScoped1({ scope: scope2 })) => ({}))
-
-		const createScoped2 = defineDep(creator2, {
+		const createScoped2 = defineInjectable((_scoped1 = scope2.inject(createScoped1)) => ({}), {
 			scopeType: SCOPED_SCOPE,
 		})
 
-		createScoped2({ scope: scope1 })
+		scope1.inject(createScoped2)
 
 		expect(scope1.instances.size).toBe(1)
-		expect(scope1.instances.has(creator1)).toBe(false)
-		expect(scope1.instances.has(creator2)).toBe(true)
+		expect(scope1.instances.has(createScoped1)).toBe(false)
+		expect(scope1.instances.has(createScoped2)).toBe(true)
 
 		expect(scope2.instances.size).toBe(1)
-		expect(scope2.instances.has(creator1)).toBe(true)
-		expect(scope2.instances.has(creator2)).toBe(false)
+		expect(scope2.instances.has(createScoped1)).toBe(true)
+		expect(scope2.instances.has(createScoped2)).toBe(false)
 	})
 
 	it('should support props', () => {
 		type Props = {
 			name: string
 		}
-		const createCar = defineDep((props: Props) => {
+		const createCar = defineInjectable((props: Props) => {
 			return {
 				start: () => {
 					return `starting ${props.name}`
@@ -329,8 +321,8 @@ describe('scoped dependencies', () => {
 
 		const scope = createScope()
 
-		const car1 = createCar({ scope, props: { name: 'car1' } })
-		const car2 = createCar({ scope, props: { name: 'car2' } })
+		const car1 = scope.inject(createCar, { name: 'car1' })
+		const car2 = scope.inject(createCar, { name: 'car2' })
 
 		expect(car1.start()).toBe('starting car1')
 		// car2 should use the same instance as car1, so the props should be ignored
@@ -340,31 +332,31 @@ describe('scoped dependencies', () => {
 
 describe('dependencies', () => {
 	it('should register only direct dependencies', () => {
-		const dep1 = defineDep(() => {
+		const dep1 = defineInjectable(() => {
 			return {}
 		})
-		const dep2 = defineDep(() => {
-			return {}
-		})
-
-		const dep3 = defineDep((_dep1 = dep1(), _dep2 = dep2()) => {
+		const dep2 = defineInjectable(() => {
 			return {}
 		})
 
-		const main = defineDep((_dep3 = dep3()) => {
+		const dep3 = defineInjectable((_dep1 = inject(dep1), _dep2 = inject(dep2)) => {
 			return {}
 		})
 
-		main()
+		const main = defineInjectable((_dep3 = inject(dep3)) => {
+			return {}
+		})
+
+		inject(main)
 
 		expect(dep1.deps.size).toBe(0)
 		expect(dep2.deps.size).toBe(0)
 
 		expect(dep3.deps.size).toBe(2)
-		expect(dep3.deps).includes(dep1.creator)
-		expect(dep3.deps).includes(dep2.creator)
+		expect(dep3.deps).includes(dep1)
+		expect(dep3.deps).includes(dep2)
 
 		expect(main.deps.size).toBe(1)
-		expect(main.deps).includes(dep3.creator)
+		expect(main.deps).includes(dep3)
 	})
 })

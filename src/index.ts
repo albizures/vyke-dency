@@ -1,8 +1,8 @@
 export {
 	createScope,
-	type Creator,
-	defineDep,
-	type Injector,
+	defineInjectable,
+	inject,
+	type Injectable,
 	rootScope,
 	type Scope,
 	SCOPE_TYPE,
@@ -10,4 +10,5 @@ export {
 	type ScopeType,
 	SINGLETON_SCOPE,
 	TRANSIENT_SCOPE,
-} from './dency'
+	use,
+} from './injectable'
