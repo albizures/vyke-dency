@@ -118,8 +118,8 @@ type DefineInjectableArgs = {
  * }) // Default scope type is SINGLETON_SCOPE
  * ```
  */
-export function defineInjectable<
-	TArgs extends Array<any>, TReturn,
+export function defineInjectable<TReturn,
+	TArgs extends Array<any> = Array<never>,
 >(creator: (...args: TArgs) => TReturn, args: DefineInjectableArgs = {}): Injectable<TArgs, TReturn> {
 	const { scopeType = SINGLETON_SCOPE } = args
 	const injectable: Injectable<TArgs, TReturn> = {
